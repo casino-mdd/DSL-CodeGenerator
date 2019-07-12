@@ -1,0 +1,5 @@
+*
+!./DSL-CodeGenerator/casinoDSL/src/org/xtext/example/mydsl1
+!./DSL-CodeGenerator/casinoDSL/src/org/xtext/example/mydsl1/generator
+!.gitignore
+!.Instance
