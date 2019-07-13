@@ -62,11 +62,10 @@ class MyDslGenerator extends AbstractGenerator {
   	
 	def compileProperty(Property p)'''
 	«IF p.type.name ==='Num'»
-		Integer 
+		Integer «p.name»;
 	«ELSE»
-		«p.type.name» «p.name» ;
+		«p.type.name» «p.name»;
 	«ENDIF»
-		
 	''' 
 	
 	def compilePojo(GeneralEntity e) ''' 
