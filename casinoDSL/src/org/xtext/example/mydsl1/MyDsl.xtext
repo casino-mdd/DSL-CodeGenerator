@@ -138,7 +138,7 @@ SublayerSegmentName:
 RelationArch:
 	'relationArch' name=ID '{'
 		'source:' source=LayerName ','
-		'target:' source=LayerName
+		'target:' target=LayerName
 	'}'
 ;
 
