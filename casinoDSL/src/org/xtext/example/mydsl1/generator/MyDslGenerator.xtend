@@ -13,6 +13,7 @@ import org.eclipse.xtext.naming.IQualifiedNameProvider
 import javax.inject.Inject
 import org.xtext.example.mydsl1.myDsl.GeneralEntity
 import org.xtext.example.mydsl1.myDsl.Property
+import org.xtext.example.mydsl1.generator.FrontGenerator
 
 /**
  * Generates code from your model files on save.
@@ -22,13 +23,17 @@ import org.xtext.example.mydsl1.myDsl.Property
 class MyDslGenerator extends AbstractGenerator {
 
 	@Inject extension IQualifiedNameProvider
-	
+
 	override void doGenerate(Resource resource, IFileSystemAccess2 fsa, IGeneratorContext context) {
-		
+
+		var frontGen = new FrontGenerator;
+
+		frontGen.doGenerate(resource, fsa, context);
+
 		for (layerS : resource.allContents.toIterable.filter(LayerSegment)) {
-			 
+
 			if (layerS.fullyQualifiedName.toString().equals("Back.Ejb.Facade")) {
-				
+
 				for (en : resource.allContents.toIterable.filter(EntityName)) {
 					fsa.generateFile(layerS.fullyQualifiedName.toString("/") + "/" + en.name + "Facade.java",
 						en.compile)
@@ -55,30 +60,30 @@ class MyDslGenerator extends AbstractGenerator {
 						en.compilePojo)
 				}
 			}
- 
+
 		}
-		
-		}
-  	
-	def compileProperty(Property p)'''
-	«IF p.type.name ==='Num'»
-		Integer «p.name»;
-	«ELSE»
-		«p.type.name» «p.name»;
-	«ENDIF»
-	''' 
-	
+
+	}
+
+	def compileProperty(Property p) '''
+		«IF p.type.name ==='Num'»
+			Integer «p.name»;
+		«ELSE»
+			«p.type.name» «p.name»;
+		«ENDIF»
+	'''
+
 	def compilePojo(GeneralEntity e) ''' 
 		
 		package mdd.casino.jpa.entity.pojo;
 		
 		public class «e.name.name»{
-	
-			«FOR p:e.properties»
-				«p.compileProperty» 
-			«ENDFOR»
-	
-			
+		
+				«FOR p : e.properties»
+					«p.compileProperty» 
+				«ENDFOR»
+		
+				
 		}
 		
 	'''
@@ -92,7 +97,7 @@ class MyDslGenerator extends AbstractGenerator {
 		}
 		
 	'''
-	
+
 	def compileRest(EntityName e) ''' 
 		
 		package mdd.casino.rest.entity;
@@ -114,6 +119,7 @@ class MyDslGenerator extends AbstractGenerator {
 		}
 		
 	'''
+
 	def compile(EntityName e) ''' 
 		
 		package mdd.casino.jpa.entity.facade;
@@ -142,6 +148,6 @@ class MyDslGenerator extends AbstractGenerator {
 			    
 		
 		}	
-	 '''
+	'''
 
-	}
+}
