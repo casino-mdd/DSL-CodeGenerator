@@ -7,6 +7,8 @@ import org.eclipse.xtext.generator.IGeneratorContext
 import java.util.ArrayList
 import org.xtext.example.mydsl1.myDsl.EntityName
 import org.xtext.example.mydsl1.myDsl.Json
+import org.xtext.example.mydsl1.myDsl.Property
+import org.xtext.example.mydsl1.myDsl.GeneralEntity
 
 public class FrontGenerator extends AbstractGenerator {
 
@@ -25,8 +27,6 @@ public class FrontGenerator extends AbstractGenerator {
 		fsa.generateFile(reactSrcDirectory + "/Store/Constants.js", compileConstants(entities));
 
 		for (uiComp : resource.allContents.toIterable.filter(EntityName)) {
-			fsa.generateFile(reactSrcDirectory + "UI/" + uiComp.name + "/" + uiComp.name + ".js",
-				uiComp.compileUiComponent);
 			fsa.generateFile(
 				reactSrcDirectory + "Store/Actions/" + uiComp.name + "Actions.js",
 				uiComp.compileActionComponent
@@ -45,14 +45,43 @@ public class FrontGenerator extends AbstractGenerator {
 			);
 		}
 
+		for (uiComp : resource.allContents.toIterable.filter(GeneralEntity)) {
+
+			fsa.generateFile(
+				reactSrcDirectory + "UI/" + uiComp.name.name + "/" + uiComp.name.name + ".js",
+				uiComp.compileUiComponent
+			);
+
+			fsa.generateFile(
+				reactSrcDirectory + "UI/" + uiComp.name.name + "/" + uiComp.name.name + "Form.js",
+				uiComp.compileUiForm
+			);
+
+		}
+
 	}
 
-	def compileUiComponent(EntityName e) '''
+	def compileUiComponent(GeneralEntity e) '''
 		import {} from ''
 			  	
 				class «e.name» extends Component{
 					constructor(props){
-						
+						super(props)
+						this.state = {
+							columns: [
+							
+								«FOR p : e.properties»
+									«IF p.name !='createdAt' && p.name !='updatedAt' »
+									{
+										title:		'«p.name»'
+										dataIndex: 	'«p.name»'
+										key: 		'«p.name»'
+									},
+									«ENDIF»
+								«ENDFOR»
+							
+							]
+						};
 					}
 					
 					render(){
@@ -60,7 +89,47 @@ public class FrontGenerator extends AbstractGenerator {
 					}
 				}
 				
-				return default «e.name»
+				return default «e.name.name»
+	'''
+
+	def compileUiForm(GeneralEntity e) '''
+		import React from 'react';
+		
+		class «e.name.name»Form extends React.Component{
+			
+			constructor(props){
+				super(props);
+				
+			}
+			
+			handleSubmit(e){
+				e.preventDefault();
+				this.props.form.validateFieldsAndScroll((err, values) => {
+					if(!err){
+						const «e.name.name»Info = {
+						              		«FOR p : e.properties»
+						              			«IF p.name !='createdAt' && p.name !='updatedAt' »
+						              				«p.name»: values.«p.name»
+						              			«ENDIF»
+											«ENDFOR»
+						};
+						this.props.create«e.name.name»(«e.name.name»Info);
+					}
+					else{
+					    ErrorMsg('Incomplete Info');
+					}
+				}
+				
+				render(){
+					
+					return(
+					
+					);
+					
+				}
+			}
+				
+			export default Form.create()(«e.name.name»Form)
 	'''
 
 	def compileActionComponent(EntityName e) '''
