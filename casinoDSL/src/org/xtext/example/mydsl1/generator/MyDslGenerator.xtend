@@ -14,6 +14,9 @@ import javax.inject.Inject
 import org.xtext.example.mydsl1.myDsl.GeneralEntity
 import org.xtext.example.mydsl1.myDsl.Property
 import org.xtext.example.mydsl1.generator.FrontGenerator
+import org.xtext.example.mydsl1.myDsl.Descriptor
+import org.xtext.example.mydsl1.myDsl.Subproject
+import org.xtext.example.mydsl1.myDsl.Epackage
 
 /**
  * Generates code from your model files on save.
@@ -32,45 +35,119 @@ class MyDslGenerator extends AbstractGenerator {
 
 		for (layerS : resource.allContents.toIterable.filter(LayerSegment)) {
 
-			if (layerS.fullyQualifiedName.toString().equals("Back.Ejb.Facade")) {
-
-				for (en : resource.allContents.toIterable.filter(EntityName)) {
-					fsa.generateFile(layerS.fullyQualifiedName.toString("/") + "/" + en.name + "Facade.java",
-						en.compile)
-				}
-			}
-
-			if (layerS.fullyQualifiedName.toString().equals("Back.Ejb.Dto")) {
-				for (en : resource.allContents.toIterable.filter(EntityName)) {
-					fsa.generateFile(layerS.fullyQualifiedName.toString("/") + "/" + en.name + "Dto.java",
-						en.compileDto)
-				}
-			}
-
-			if (layerS.fullyQualifiedName.toString().equals("Back.War.RestEntity")) {
-				for (en : resource.allContents.toIterable.filter(EntityName)) {
-					fsa.generateFile(layerS.fullyQualifiedName.toString("/") + "/" + en.name + "Rest.java",
-						en.compileRest)
-				}
-			}
-
-			if (layerS.fullyQualifiedName.toString().equals("Back.Ejb.Pojo")) {
-				for (en : resource.allContents.toIterable.filter(GeneralEntity)) {
-					fsa.generateFile(layerS.fullyQualifiedName.toString("/") + "/" + en.name.name + ".java",
-						en.compilePojo)
-				}
-			}
+			buildPackage("facade", layerS, resource, fsa);
+			buildPackage("dto", layerS, resource, fsa);
+			buildPackage("pojo", layerS, resource, fsa);
+			buildPackage("restEntity", layerS, resource, fsa);
 
 		}
 
+	// Descriptor
+	/*for (layerS : resource.allContents.toIterable.filter(LayerSegment)) {
+	 * 	for (subp : resource.allContents.toIterable.filter(Subproject)) {
+	 * 		for (descriptor : subp.descriptor) {
+	 * 		}
+	 * 	}
+	 }*/
 	}
 
-   def typeJava(String type){
-		if(type.equals("Num")){
+	def buildPackage(String namePackage, LayerSegment layerS, Resource resource, IFileSystemAccess2 fsa) {
+		if (layerS.name.equals(namePackage.toFirstUpper)) {
+			for (en : resource.allContents.toIterable.filter(GeneralEntity)) {
+				// fsa.generateFile(layerS.fullyQualifiedName.toString("/") + "/" + en.name + "Facade.java",en.compileFacade)
+				for (subp : resource.allContents.toIterable.filter(Subproject)) {
+					for (pck : resource.allContents.toIterable.filter(Epackage)) {
+						if (pck.name.equals(namePackage)) {
+
+							selectCompile(en, layerS, namePackage, pck, fsa);
+
+						}
+					}
+
+					for (descriptor : subp.descriptor) {
+						if (descriptor.name.equals("persistence_xml")) {
+							fsa.generateFile(
+								layerS.eContainer.eContainer.fullyQualifiedName.toString + "/" +
+									subp.fullyQualifiedName.toString("/") + "/" + descriptor.path + "/" +
+									descriptor.name.replaceAll("_", "."), descriptor.compilePersitenceXml);
+						}
+						
+						if (descriptor.name.equals("web_xml")) {
+							fsa.generateFile(
+								layerS.eContainer.eContainer.fullyQualifiedName.toString + "/" +
+									subp.fullyQualifiedName.toString("/") + "/" + descriptor.path + "/" +
+									descriptor.name.replaceAll("_", "."), descriptor.compileWebXml);
+						}
+					}
+
+				}
+			}
+		}
+	}
+
+	def selectCompile(GeneralEntity en, LayerSegment layerS, String namePackage, Epackage pck, IFileSystemAccess2 fsa) {
+		if (namePackage.equals("facade")) {
+			fsa.generateFile(
+				layerS.eContainer.eContainer.fullyQualifiedName.toString + "/" + pck.fullyQualifiedName.toString("/") +
+					"/" + en.name.name + layerS.name + ".java", en.compileFacade)
+		}
+
+		if (namePackage.equals("dto")) {
+			fsa.generateFile(
+				layerS.eContainer.eContainer.fullyQualifiedName.toString + "/" + pck.fullyQualifiedName.toString("/") +
+					"/" + en.name.name + layerS.name + ".java", en.compileDto)
+		}
+
+		if (namePackage.equals("restEntity")) {
+			fsa.generateFile(
+				layerS.eContainer.eContainer.fullyQualifiedName.toString + "/" + pck.fullyQualifiedName.toString("/") +
+					"/" + en.name.name + layerS.name + ".java", en.compileRest)
+		}
+
+		if (namePackage.equals("pojo")) {
+			fsa.generateFile(
+				layerS.eContainer.eContainer.fullyQualifiedName.toString + "/" + pck.fullyQualifiedName.toString("/") +
+					"/" + en.name.name + ".java", en.compilePojo)
+		}
+	}
+
+	def typeJava(String type) {
+		if (type.equals("Num")) {
 			return "Integer";
 		}
 		return type;
 	}
+
+	def compilePersitenceXml(Descriptor d)'''
+		<?xml version="1.0" encoding="UTF-8"?>
+		<persistence version="2.0" xmlns="http://java.sun.com/xml/ns/persistence" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://java.sun.com/xml/ns/persistence http://java.sun.com/xml/ns/persistence/persistence_2_0.xsd">
+		    <persistence-unit name="casino-ejbPU" transaction-type="JTA">
+		        <provider>org.hibernate.ejb.HibernatePersistence</provider>
+		        <jta-data-source>JNDI_casino</jta-data-source>
+		        <exclude-unlisted-classes>false</exclude-unlisted-classes>
+		        <properties>
+		            <property name="hibernate.show_sql" value="false"/>
+		            <property name="hibernate.format_sql" value="false"/>
+		        </properties>
+		    </persistence-unit>
+		</persistence>
+	'''
+	
+	def compileWebXml(Descriptor d)'''
+		<?xml version="1.0" encoding="UTF-8"?>
+		<web-app version="3.1" xmlns="http://xmlns.jcp.org/xml/ns/javaee" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://xmlns.jcp.org/xml/ns/javaee http://xmlns.jcp.org/xml/ns/javaee/web-app_3_1.xsd">
+		</web>
+	'''
+
+	def compile(Subproject s) ''' 
+	'''
+
+	def compileDescriptor(Descriptor d) ''' 
+	'''
+
+	def compile(Epackage pck) ''' 
+		«pck.fullyQualifiedName.toString»
+	'''
 
 	def compilePojo(GeneralEntity e) ''' 
 		
@@ -86,49 +163,49 @@ class MyDslGenerator extends AbstractGenerator {
 				«FOR p : e.properties»
 					public void set«p.name.toFirstUpper()»(«typeJava(p.type.name)» «p.name»){
 						this.«p.name»=«p.name»;
-				    }
-			    public «typeJava(p.type.name)» get«p.name.toFirstUpper()»(){
-			    	return this.«p.name»;
-			    }
+						  }
+						 public «typeJava(p.type.name)» get«p.name.toFirstUpper()»(){
+						 	return this.«p.name»;
+						 }
 				«ENDFOR»
 				
 		}
 		
 	'''
 
-	def compileDto(EntityName e) ''' 
+	def compileDto(GeneralEntity e) ''' 
 		
 		package mdd.casino.jpa.entity.dto;
 		
-		public class «e.name»Dto {
+		public class «e.name.name»Dto {
 			
 		}
 		
 	'''
 
-	def compileRest(EntityName e) ''' 
+	def compileRest(GeneralEntity e) ''' 
 		
 		package mdd.casino.rest.entity;
 		
-		public class «e.name»Res  extends AbstractRest<«e.name»> {
+		public class «e.name.name»Res  extends AbstractRest<«e.name.name»> {
 			    @Context
 			    private UriInfo context;
 			    
-			    «e.name»Facade facade = BeanUtil.lookupFacadeBean(«e.name»Facade.class);
+			    «e.name.name»Facade facade = BeanUtil.lookupFacadeBean(«e.name.name»Facade.class);
 			    
-			       public  «e.name»Rest() {
-			            super( «e.name».class);
+			       public  «e.name.name»Rest() {
+			            super( «e.name.name».class);
 			        }
 			    
 			        @Override
-			        public  «e.name»Facade getFacade() {
+			        public  «e.name.name»Facade getFacade() {
 			            return facade;
 			        }
 		}
 		
 	'''
 
-	def compile(EntityName e) ''' 
+	def compileFacade(GeneralEntity e) ''' 
 		
 		package mdd.casino.jpa.entity.facade;
 		
@@ -136,10 +213,10 @@ class MyDslGenerator extends AbstractGenerator {
 		import javax.persistence.EntityManager;
 		import javax.persistence.EntityManagerFactory;
 		import javax.persistence.PersistenceUnit;
-		import mdd.casino.jpa.entity.pojo.«e.name»;
+		import mdd.casino.jpa.entity.pojo.«e.name.name»;
 		
 		@Stateless
-		public class «e.name»Facade extends AbtractFacade{
+		public class «e.name.name»Facade extends AbtractFacade{
 		
 		
 			    @PersistenceUnit
@@ -150,8 +227,8 @@ class MyDslGenerator extends AbstractGenerator {
 			        return emf.createEntityManager();
 			    }
 		
-			    public «e.name»Facade() {
-			        super(«e.name».class);
+			    public «e.name.name»Facade() {
+			        super(«e.name.name».class);
 			    }
 			    
 		

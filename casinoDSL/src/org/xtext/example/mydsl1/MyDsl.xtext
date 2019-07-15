@@ -223,7 +223,7 @@ AbstractMethod: 'abstractMethodBack' name=ID '{'
 ;
 
 Descriptor: 'descriptor' name=ID '{'
-	'path' name=STRING
+	'path' path=STRING
 '}'
 ;
 

@@ -310,11 +310,11 @@ Casino{
 		 			isNative false
 		 			annotation EJB {}
 		 		},
-		 		descriptor persistence_xml{ path "./config"}
+		 		descriptor persistence_xml{ path "config"}
 		 	} 
 		 	
 		 	subproject casino_war{
-		 		epackage rest{
+		 		epackage restEntity{
 		 			abstractClass AbstractRest{
 		 			}
 		 			genericClass xRest{
@@ -329,7 +329,7 @@ Casino{
 		 			annotation PUT{}
 		 			annotation ENDPOINT{propertie "path"}
 		 		},
-		 		descriptor web_xm{ path "./WEB-INF"}
+		 		descriptor web_xml{ path "WEB-INF"}
 		 	}
 		 	
 		 }//jeeProject
