@@ -21,6 +21,7 @@ import org.xtext.example.mydsl1.myDsl.Json
 import org.xtext.example.mydsl1.myDsl.Visualizer
 import java.lang.invoke.MethodHandles.Lookup
 import org.xtext.example.mydsl1.myDsl.ServiceFront
+import org.xtext.example.mydsl1.generator.FrontGenerator
 
 /**
  * Generates code from your model files on save.
@@ -30,13 +31,17 @@ import org.xtext.example.mydsl1.myDsl.ServiceFront
 class MyDslGenerator extends AbstractGenerator {
 
 	@Inject extension IQualifiedNameProvider
-	
+
 	override void doGenerate(Resource resource, IFileSystemAccess2 fsa, IGeneratorContext context) {
-		
+
+		var frontGen = new FrontGenerator;
+
+		frontGen.doGenerate(resource, fsa, context);
+
 		for (layerS : resource.allContents.toIterable.filter(LayerSegment)) {
-			 
+
 			if (layerS.fullyQualifiedName.toString().equals("Back.Ejb.Facade")) {
-				
+
 				for (en : resource.allContents.toIterable.filter(EntityName)) {
 					fsa.generateFile(layerS.fullyQualifiedName.toString("/") + "/" + en.name + "Facade.java",
 						en.compile)
@@ -63,104 +68,38 @@ class MyDslGenerator extends AbstractGenerator {
 						en.compilePojo)
 				}
 			}
-			
-			if(layerS.fullyQualifiedName.toString().equals("Front.JavaScript.Ui")){
-				
-				/*
-				for(actionComponent: resource.allContents.toIterable.filter(EntityName)){
-					fsa.generateFile("Store/Actions/" + actionComponent.name + "Actions.js",
-						actionComponent.compileActionComponent
-					);
-				}
-				
-				for(reducerComponent: resource.allContents.toIterable.filter(EntityName)){
-					fsa.generateFile("Store/Reducers/" + reducerComponent.name + "Reducer.js", 
-						reducerComponent.compileReducers
-					);
-				}
-				
-				for(serviceComponent: resource.allContents.toIterable.filter(EntityName)){
-					fsa.generateFile("Services/"+ serviceComponent.name+"Services.js",
-						serviceComponent.compileService
-					);
-				}
-				
-				for(containerComponent: resource.allContents.toIterable.filter(EntityName)){
-					fsa.generateFile("Containers/"+ containerComponent.name + "Container.js",
-						containerComponent.compileContainer
-					);
-				}*/
-			}
 
 		}
-		
-		var reactDir = "casino-front/";
-		var reactSrcDirectory = reactDir+"src/";
-		var entities = new ArrayList<EntityName>();
-		
-		var jsonFile = resource.allContents.filter(Json).toIterable().get(0);
-		fsa.generateFile(reactDir+jsonFile.name+".json", jsonFile.compileJsonFile);		
-		
-		for(e : resource.allContents.toIterable.filter(EntityName))
-			entities.add(e);
-				
-		fsa.generateFile(reactSrcDirectory + "/Store/Constants.js", compileConstants(entities));
-		
-		var visualizerComponents = resource.allContents.toIterable.filter(Visualizer);
-		var customVisualizer = visualizerComponents.get(1);
-		
-		for(v : visualizerComponents){
-			System.out.println("Vis component" + v.fullyQualifiedName);
-			if(v.fullyQualifiedName.equals("componentCustomVisualizer")){
-				customVisualizer = v;	
-			}
-		}
-		
-		for(m: customVisualizer.methods){
-			System.out.println("Method" + m.name);
-			for(arg: m.arguments){
-				System.out.println("Argument" + arg.name);
-			}
-		}
-		
-		for(uiComp: resource.allContents.toIterable.filter(EntityName)){
-			fsa.generateFile(reactSrcDirectory + "UI/"+ uiComp.name + "/" + uiComp.name +".js",
-				compileUiComponent(uiComp, customVisualizer) );
-			fsa.generateFile(reactSrcDirectory + "Store/Actions/" + uiComp.name + "Actions.js",
-				uiComp.compileActionComponent
-			);
-			fsa.generateFile(reactSrcDirectory + "Store/Reducers/" + uiComp.name + "Reducer.js", 
-				uiComp.compileReducers
-			);		
-			fsa.generateFile(reactSrcDirectory + "Services/"+ uiComp.name+"Services.js",
-				uiComp.compileService
-			);
-			fsa.generateFile(reactSrcDirectory + "Containers/"+ uiComp.name + "Container.js",
-				uiComp.compileContainer
-			);		
-		}
-		
+
 	}
-  	
-	def compileProperty(Property p)'''
-	«IF p.type.name ==='Num'»
-		Integer «p.name»;
-	«ELSE»
-		«p.type.name» «p.name»;
-	«ENDIF»
-	''' 
-	
+
+   def typeJava(String type){
+		if(type.equals("Num")){
+			return "Integer";
+		}
+		return type;
+	}
+
 	def compilePojo(GeneralEntity e) ''' 
 		
 		package mdd.casino.jpa.entity.pojo;
 		
-		public class «e.name.name»{
-	
-			«FOR p:e.properties»
-				«p.compileProperty» 
-			«ENDFOR»
-	
-			
+		public class ï¿½e.name.nameï¿½{
+		
+				ï¿½FOR p : e.propertiesï¿½
+					ï¿½typeJava(p.type.name)ï¿½ ï¿½p.nameï¿½;
+				ï¿½ENDFORï¿½
+				
+				//Get Set
+				ï¿½FOR p : e.propertiesï¿½
+					public void setï¿½p.name.toFirstUpper()ï¿½(ï¿½typeJava(p.type.name)ï¿½ ï¿½p.nameï¿½){
+						this.ï¿½p.nameï¿½=ï¿½p.nameï¿½;
+				    }
+			    public ï¿½typeJava(p.type.name)ï¿½ getï¿½p.name.toFirstUpper()ï¿½(){
+			    	return this.ï¿½p.nameï¿½;
+			    }
+				ï¿½ENDFORï¿½
+				
 		}
 		
 	'''
@@ -169,33 +108,34 @@ class MyDslGenerator extends AbstractGenerator {
 		
 		package mdd.casino.jpa.entity.dto;
 		
-		public class «e.name»Dto {
+		public class ï¿½e.nameï¿½Dto {
 			
 		}
 		
 	'''
-	
+
 	def compileRest(EntityName e) ''' 
 		
 		package mdd.casino.rest.entity;
 		
-		public class «e.name»Res  extends AbstractRest<«e.name»> {
+		public class ï¿½e.nameï¿½Res  extends AbstractRest<ï¿½e.nameï¿½> {
 			    @Context
 			    private UriInfo context;
 			    
-			    «e.name»Facade facade = BeanUtil.lookupFacadeBean(«e.name»Facade.class);
+			    ï¿½e.nameï¿½Facade facade = BeanUtil.lookupFacadeBean(ï¿½e.nameï¿½Facade.class);
 			    
-			       public  «e.name»Rest() {
-			            super( «e.name».class);
+			       public  ï¿½e.nameï¿½Rest() {
+			            super( ï¿½e.nameï¿½.class);
 			        }
 			    
 			        @Override
-			        public  «e.name»Facade getFacade() {
+			        public  ï¿½e.nameï¿½Facade getFacade() {
 			            return facade;
 			        }
 		}
 		
 	'''
+
 	def compile(EntityName e) ''' 
 		
 		package mdd.casino.jpa.entity.facade;
@@ -204,10 +144,10 @@ class MyDslGenerator extends AbstractGenerator {
 		import javax.persistence.EntityManager;
 		import javax.persistence.EntityManagerFactory;
 		import javax.persistence.PersistenceUnit;
-		import mdd.casino.jpa.entity.pojo.«e.name»;
+		import mdd.casino.jpa.entity.pojo.ï¿½e.nameï¿½;
 		
 		@Stateless
-		public class «e.name»Facade extends AbtractFacade{
+		public class ï¿½e.nameï¿½Facade extends AbtractFacade{
 		
 		
 			    @PersistenceUnit
@@ -218,143 +158,12 @@ class MyDslGenerator extends AbstractGenerator {
 			        return emf.createEntityManager();
 			    }
 		
-			    public «e.name»Facade() {
-			        super(«e.name».class);
+			    public ï¿½e.nameï¿½Facade() {
+			        super(ï¿½e.nameï¿½.class);
 			    }
 			    
 		
 		}	
-	 '''
-	
-	def compileUiComponent(EntityName e, Visualizer v)'''
- 	import react, {Component} from 'react'
-	 	  	
-	class «e.name» extends Component{
-		«FOR method: v.methods»
-		
-		«var i = 0»
-		«var args = ""»
-		
-		«while( i < method.arguments.length){
-			if(i < method.arguments.length()){
-				args += method.arguments.get(i).name
-			}
-			else{
-				args += method.arguments.get(i).name + ","
-			}
-			i = i+1
-		}»
-		
-		«method.name»( «args» ){
-			
-		}
-		«ENDFOR»
-	}
-	
-	return default «e.name»
-	 '''
-	 
-    def compileActionComponent(EntityName e)'''
-	 import {«e.name»ReducerConstants as C} from ''
-	 
-	 const set«e.name»s = («e.name»s) => {
-	 	return {
-	 		type: SET_C.«e.name»S_LIST,
-	 		«e.name»s
-	 	}
-	 }
-	 
-	 export const fetch«e.name»s = () => {
-	 	return dispatch => {
-	 		«e.name»Services.get«e.name»List()
-	 		.then(response => {
-	 			dispach( set«e.name»s(response.data));
-	 		})
-	 		.catch(err => {
-	 			
-	 		})
-	 	}
-	 }
-	 
-	 export const create«e.name» = («e.name.toLowerCase()»Info) => {
-	 	return dispatch
-	 }
-	  	
 	'''
-	 
-	def compileReducers(EntityName e) '''
-		import {«e.name»ReducerConstants as C} from ''
-		
-		const initialState = {
-	  		«e.name.toLowerCase()»s: [],
-	  	};
-		
-		export default function «e.name»Reducer(state = initialState, action){
-			switch(action.type){
-				case C.SET_«e.name.toUpperCase()»_LIST:
-				return {
-				...state,
-  					«e.name.toLowerCase()»s: action.«e.name.toLowerCase»s
-				}
-				default:
-					return state;
-  			}
-	  	}
 
-	 '''
-	 
- 	def compileService(EntityName e)'''
- 	 import request from './RequestWrapper';
- 	 
- 	 function create«e.name»(«e.name»Info){
- 	 	
- 	 }
- 	 
- 	 function get«e.name»List(){
- 	 	
- 	 }
- 	 export default{
- 	 	
- 	 };
- 	''' 
- 	
- 	def compileContainer(EntityName e)'''
-	 import {} from ''
-	 
-	 const mapStateToProps = (state) => {
-	 	return {
-	 		
-	 	};
-	 }
-	 
-	 const mapDispatchToProps = (dispatch) => {
-	 	return{
-	 		
-	 	};
-	 } 	
-	 
-	 export default connect(mapStateToProps, mapDispatchToProps)();
- 	'''
- 	
- 	def compileConstants(ArrayList<EntityName> entities)'''
- 		«FOR e:entities»
- 			export const «e.name»ReducerConstants={
- 				
- 			};
- 		«ENDFOR»
-		
- 	'''
- 	
- 	def compileJsonFile(Json file)'''
-	{
-		"name": "casino-front",
-		"version": "0.1.0",
-		"private": true,
-		"dependencies": {},
-		"scripts": {},
-		"eslintConfig": {},
-		"browserslist": {}
-	}
-	'''
-	}
-	
+}
