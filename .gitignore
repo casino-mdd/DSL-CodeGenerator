@@ -1,5 +1,10 @@
-*
-!./DSL-CodeGenerator/casinoDSL/src/org/xtext/example/mydsl1
-!./DSL-CodeGenerator/casinoDSL/src/org/xtext/example/mydsl1/generator
+casinoDSL/*
+!casinoDSL/src/org/xtext/example/mydsl1/generator/MyDslGenerator.xtend
+!casinoDSL/src/org/xtext/example/mydsl1/MyDsl.xtext
+casinoDSL.ide/*
+casinoDSL.tests/*
+casinoDSL.ui/*
+casinoDSL.ui.tests/*
+Instancia/*
+!Instancia/src/
 !.gitignore
-!.Instance
