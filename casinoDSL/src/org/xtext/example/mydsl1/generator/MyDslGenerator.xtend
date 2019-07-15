@@ -13,14 +13,6 @@ import org.eclipse.xtext.naming.IQualifiedNameProvider
 import javax.inject.Inject
 import org.xtext.example.mydsl1.myDsl.GeneralEntity
 import org.xtext.example.mydsl1.myDsl.Property
-import java.util.ArrayList
-import org.xtext.example.mydsl1.myDsl.Module
-import org.apache.log4j.chainsaw.Main
-import org.xtext.example.mydsl1.myDsl.SpecialEntity
-import org.xtext.example.mydsl1.myDsl.Json
-import org.xtext.example.mydsl1.myDsl.Visualizer
-import java.lang.invoke.MethodHandles.Lookup
-import org.xtext.example.mydsl1.myDsl.ServiceFront
 import org.xtext.example.mydsl1.generator.FrontGenerator
 import org.xtext.example.mydsl1.myDsl.Descriptor
 import org.xtext.example.mydsl1.myDsl.Subproject
@@ -154,65 +146,62 @@ class MyDslGenerator extends AbstractGenerator {
 	'''
 
 	def compile(Epackage pck) ''' 
-		ï¿½pck.fullyQualifiedName.toStringï¿½
+		«pck.fullyQualifiedName.toString»
 	'''
 
 	def compilePojo(GeneralEntity e) ''' 
 		
 		package mdd.casino.jpa.entity.pojo;
 		
-		public class ï¿½e.name.nameï¿½{
+		public class «e.name.name»{
 		
-				ï¿½FOR p : e.propertiesï¿½
-					ï¿½typeJava(p.type.name)ï¿½ ï¿½p.nameï¿½;
-				ï¿½ENDFORï¿½
+				«FOR p : e.properties»
+					«typeJava(p.type.name)» «p.name»;
+				«ENDFOR»
 				
 				//Get Set
-				ï¿½FOR p : e.propertiesï¿½
-					public void setï¿½p.name.toFirstUpper()ï¿½(ï¿½typeJava(p.type.name)ï¿½ ï¿½p.nameï¿½){
-						this.ï¿½p.nameï¿½=ï¿½p.nameï¿½;
+				«FOR p : e.properties»
+					public void set«p.name.toFirstUpper()»(«typeJava(p.type.name)» «p.name»){
+						this.«p.name»=«p.name»;
 						  }
-						 public ï¿½typeJava(p.type.name)ï¿½ getï¿½p.name.toFirstUpper()ï¿½(){
-						 	return this.ï¿½p.nameï¿½;
+						 public «typeJava(p.type.name)» get«p.name.toFirstUpper()»(){
+						 	return this.«p.name»;
 						 }
-				ï¿½ENDFORï¿½
+				«ENDFOR»
 				
 		}
 		
 	'''
-
 	def compileDto(GeneralEntity e) ''' 
 		
 		package mdd.casino.jpa.entity.dto;
 		
-		public class ï¿½e.name.nameï¿½Dto {
+		public class «e.name.name»Dto {
 			
 		}
 		
 	'''
-
 	def compileRest(GeneralEntity e) ''' 
 		
 		package mdd.casino.rest.entity;
 		
-		public class ï¿½e.name.nameï¿½Res  extends AbstractRest<ï¿½e.name.nameï¿½> {
+		public class «e.name.name»Res  extends AbstractRest<«e.name.name»> {
 			    @Context
 			    private UriInfo context;
 			    
-			    ï¿½e.name.nameï¿½Facade facade = BeanUtil.lookupFacadeBean(ï¿½e.name.nameï¿½Facade.class);
+			    «e.name.name»Facade facade = BeanUtil.lookupFacadeBean(«e.name.name»Facade.class);
 			    
-			       public  ï¿½e.name.nameï¿½Rest() {
-			            super( ï¿½e.name.nameï¿½.class);
+			       public  «e.name.name»Rest() {
+			            super( «e.name.name».class);
 			        }
 			    
 			        @Override
-			        public  ï¿½e.name.nameï¿½Facade getFacade() {
+			        public  «e.name.name»Facade getFacade() {
 			            return facade;
 			        }
 		}
 		
 	'''
-
 	def compileFacade(GeneralEntity e) ''' 
 		
 		package mdd.casino.jpa.entity.facade;
@@ -221,10 +210,10 @@ class MyDslGenerator extends AbstractGenerator {
 		import javax.persistence.EntityManager;
 		import javax.persistence.EntityManagerFactory;
 		import javax.persistence.PersistenceUnit;
-		import mdd.casino.jpa.entity.pojo.ï¿½e.name.nameï¿½;
+		import mdd.casino.jpa.entity.pojo.«e.name.name»;
 		
 		@Stateless
-		public class ï¿½e.name.nameï¿½Facade extends AbtractFacade{
+		public class «e.name.name»Facade extends AbtractFacade{
 		
 		
 			    @PersistenceUnit
@@ -235,12 +224,11 @@ class MyDslGenerator extends AbstractGenerator {
 			        return emf.createEntityManager();
 			    }
 		
-			    public ï¿½e.name.nameï¿½Facade() {
-			        super(ï¿½e.name.nameï¿½.class);
+			    public «e.name.name»Facade() {
+			        super(«e.name.name».class);
 			    }
 			    
 		
 		}	
 	'''
-
 }
