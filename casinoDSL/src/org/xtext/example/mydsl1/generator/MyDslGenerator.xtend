@@ -65,13 +65,12 @@ class MyDslGenerator extends AbstractGenerator {
 
 	}
 
-	def compileProperty(Property p) '''
-		«IF p.type.name ==='Num'»
-			Integer «p.name»;
-		«ELSE»
-			«p.type.name» «p.name»;
-		«ENDIF»
-	'''
+   def typeJava(String type){
+		if(type.equals("Num")){
+			return "Integer";
+		}
+		return type;
+	}
 
 	def compilePojo(GeneralEntity e) ''' 
 		
@@ -80,9 +79,18 @@ class MyDslGenerator extends AbstractGenerator {
 		public class «e.name.name»{
 		
 				«FOR p : e.properties»
-					«p.compileProperty» 
+					«typeJava(p.type.name)» «p.name»;
 				«ENDFOR»
-		
+				
+				//Get Set
+				«FOR p : e.properties»
+					public void set«p.name.toFirstUpper()»(«typeJava(p.type.name)» «p.name»){
+						this.«p.name»=«p.name»;
+				    }
+			    public «typeJava(p.type.name)» get«p.name.toFirstUpper()»(){
+			    	return this.«p.name»;
+			    }
+				«ENDFOR»
 				
 		}
 		
